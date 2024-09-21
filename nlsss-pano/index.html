@@ -21,7 +21,14 @@
 <h1 style="text-align: center">NLSSS Panorama</h1>
 <pre style="text-align: center">Data retrieved from the <a href="https://paleobiodb.org/" target="_blank">Paleobiology Database</a> on September 20, 2024</pre>
 <canvas id="nlsss-chart"></canvas>
-<img id="imageDisplay" src="" alt="NLSSS">
+
+<div style="margin: 0 auto; text-align: center">
+    <strong><span class="dot blue"></span> Local Stage-Straddling Species (within 2 degrees lat/long)</strong> |
+    <strong><span class="dot green"></span>  Global Stage-Straddling Species</strong>
+</div>
+
+<img id="imageDisplay" src="" alt="NLSSS" style="width: 100%">
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -40,5 +47,21 @@ Available at: <a href="https://digitalcommons.cedarville.edu/icc_proceedings/vol
 
 
 <script src="app.js"></script>
+<style>
+    .dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .blue {
+        background-color: blue;
+    }
+
+    .green {
+        background-color: green
+    }
+</style>
 </body>
 </html>
