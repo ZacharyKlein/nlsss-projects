@@ -11,7 +11,7 @@ History," Proceedings of the International Conference on Creationism: Vol. 9, Ar
 DOI: 10.15385/jpicc.2023.9.1.31
 Available at: https://digitalcommons.cedarville.edu/icc_proceedings/vol9/iss1/19
 
-[Sample application on Static.app](https://kidding-bee.static.domains)
+[Sample application on Static.app](https://nlsss-pano.static.domains)
 
 
 ## Maps
