@@ -68,12 +68,21 @@ async function main() {
             datasets: [{
                 label: 'NLSSS',
                 data: dataPoints.map(b => b.nlsss), // Just an example dataset
-                borderColor: 'rgba(75, 192, 192, 1)',
+                borderColor: 'rgb(68,125,255)',
                 borderWidth: 2,
                 fill: true,
                 pointRadius: 0, // Remove point markers
                 tension: 0.1
-            }]
+            },
+                {
+                    label: 'NGSSS',
+                    data: dataPoints.map(b => b.ngsss), // Just an example dataset
+                    borderColor: 'rgb(96,243,70)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 0, // Remove point markers
+                    tension: 0.1
+                }]
         },
         options: {
             responsive: true,
