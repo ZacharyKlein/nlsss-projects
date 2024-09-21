@@ -15,12 +15,53 @@
             height: auto;
             margin: 20px auto;
         }
+
+        .dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .blue {
+            background-color: blue;
+        }
+
+        .green {
+            background-color: green
+        }
+
+        #slider {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        #playButton {
+            display: block;
+            margin: 10px auto;
+        }
+
+        #speedSelect {
+            display: block;
+            margin: 10px auto;
+        }
     </style>
 </head>
 <body>
 <h1 style="text-align: center">NLSSS Panorama</h1>
 <pre style="text-align: center">Data retrieved from the <a href="https://paleobiodb.org/" target="_blank">Paleobiology Database</a> on September 20, 2024</pre>
 <canvas id="nlsss-chart"></canvas>
+
+<div style="margin: 0 auto; text-align: center">
+    <input id="slider" type="range" min="0" max="113" value="0">
+    <button id="playButton">Play</button>
+    <select id="speedSelect">
+        <option value="1000">Slow (1 sec)</option>
+        <option value="500" selected>Normal (0.5 sec)</option>
+        <option value="250">Fast (0.25 sec)</option>
+    </select>
+</div>
+
 
 <div style="margin: 0 auto; text-align: center">
     <strong><span class="dot blue"></span> Local Stage-Straddling Species (within 2 degrees lat/long)</strong> |
@@ -47,21 +88,6 @@ Available at: <a href="https://digitalcommons.cedarville.edu/icc_proceedings/vol
 
 
 <script src="app.js"></script>
-<style>
-    .dot {
-        height: 10px;
-        width: 10px;
-        border-radius: 50%;
-        display: inline-block;
-    }
 
-    .blue {
-        background-color: blue;
-    }
-
-    .green {
-        background-color: green
-    }
-</style>
 </body>
 </html>
