@@ -5,6 +5,15 @@ History," Proceedings of the International Conference on Creationism: Vol. 9, Ar
 DOI: 10.15385/jpicc.2023.9.1.31
 Available at: https://digitalcommons.cedarville.edu/icc_proceedings/vol9/iss1/19
 
-[NLSSS Node](nlsss-node/README.md) - Node.js implementation of Wise & Richardson's NLSSS metric - supports downloading of Paleobiology Database files and generation of maps
+## NLSSS Node
 
-[NLSSS Pano](nlsss-pano/README.md) - Simple viewer application allowing user to pan across NLSSS graphical chart and view occurrence maps of each boundary.
+<img src="nlsss-node/nlsss-screenshot.jpg" width="600">
+
+
+[NLSSS Node](nlsss-node/) - Node.js implementation of Wise & Richardson's NLSSS metric - supports downloading of Paleobiology Database files and generation of maps
+
+## NLSSS Pano
+
+<img src="nlsss-pano/img.png" width="600">
+
+[NLSSS Pano](nlsss-pano/) - Simple viewer application allowing user to pan across NLSSS graphical chart and view occurrence maps of each boundary.
