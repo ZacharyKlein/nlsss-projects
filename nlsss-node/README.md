@@ -7,6 +7,12 @@ History," Proceedings of the International Conference on Creationism: Vol. 9, Ar
 DOI: 10.15385/jpicc.2023.9.1.31
 Available at: https://digitalcommons.cedarville.edu/icc_proceedings/vol9/iss1/19
 
+Before running any of the scripts below, run:
+
+`npm install`
+
+To prepare the environment. Tested using Node.js 18 on MacOS.
+
 # index
 
 - Downloads data from the Paleobiology Database, stores as local JSON files under `data/`
