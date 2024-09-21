@@ -21,6 +21,8 @@ const datasource_prefix = 'data/';
 const intervals_datasource = 'intervals.json';
 const occurrences_datasource = 'occurrences.json';
 
+const SKIP_FACTOR = 3;
+
 
 async function fetchOccurrencesSequentially(intervals) {
 
@@ -163,6 +165,7 @@ async function main() {
         // the boundary.
         let firstStage = filteredIntervals[i];
         let nextStage = filteredIntervals[i + 1];
+        let skipperStage = filteredIntervals[i + 1 + SKIP_FACTOR];
 
         if (firstStage.nam === "Archean" && nextStage.nam === "Eoarchean") {
             console.log("Skipping " + firstStage.nam + "/" + nextStage.nam + " boundary...")
@@ -171,6 +174,11 @@ async function main() {
 
             let firstStageOccurrences = occurrencesForInterval[firstStage.oid]
             let nextStageOccurrences = occurrencesForInterval[nextStage.oid]
+            let skipperStageOccurrences
+
+            if (skipperStage !== undefined) {
+                skipperStageOccurrences = occurrencesForInterval[skipperStage.oid]
+            }
 
             //TODO: Each of these files was processed to the taxonomic
             // level of species by deleting all records identified less precisely than
@@ -194,6 +202,17 @@ async function main() {
                 } else return true;
             })
 
+            let filteredSkipperStageOccurrences
+
+            if (skipperStage !== undefined) {
+                filteredSkipperStageOccurrences = skipperStageOccurrences.filter(occ => {
+                    if (occ.hasOwnProperty('oli')) {
+                        //Age assignment is broader than stage - exclude
+                        return false
+                    } else return true;
+                })
+            }
+
             let firstStageSpecies = filteredFirstStageOccurrences.reduce(uniqueSpecies, {
                 seen: new Set(),
                 result: []
@@ -202,6 +221,15 @@ async function main() {
                 seen: new Set(),
                 result: []
             }).result || [];
+
+            let skipperStageSpecies
+
+            if (skipperStage !== undefined) {
+                skipperStageSpecies = filteredSkipperStageOccurrences.reduce(uniqueSpecies, {
+                    seen: new Set(),
+                    result: []
+                }).result || [];
+            }
 
             // Total Combined Stage Species
             let tcss = filteredFirstStageOccurrences.concat(filteredNextStageOccurrences).reduce(uniqueSpecies, {
@@ -213,6 +241,21 @@ async function main() {
 
             //Occurrences of Global Stage-Straddling Species
             let ogsss = filteredFirstStageOccurrences.filter(occ1 => filteredNextStageOccurrences.some(occ2 => occ2.tna === occ1.tna))
+
+            //Occurrences of Global Stage-Skipping Species
+            let ogsSs = []
+
+            if (skipperStage !== undefined) {
+                ogsSs = filteredFirstStageOccurrences.filter(occ1 => filteredSkipperStageOccurrences.some(occ2 => occ2.tna === occ1.tna))
+            }
+
+            //NLSSkS = Number of Local Stage-Skipping Species
+            let ngsSs = []
+            if(skipperStage !== undefined) {
+                ngsSs = ogsSs.reduce(uniqueSpecies, {seen: new Set(), result: []}).result || [];
+                console.log("Total NGSSkS value for %s/%s boundary: %d", firstStage.nam, skipperStage.nam, ngsSs.length)
+            }
+
 
             //Number of Global Stage-Straddling Species
             let ngsss = ogsss.reduce(uniqueSpecies, {
@@ -231,8 +274,20 @@ async function main() {
 
                 return !isGreaterThanNDegreesFromAll(nsoccSameTaxa, occ, 2)
             })
-
             console.log("Filtered %d %s taxa within 2 degrees long/lat of same taxa in %s", olsss.length, firstStage.nam, nextStage.nam)
+
+            //Occurrences of Local Stage-Skipping Species
+            let olsSs = []
+
+            if (skipperStage !== undefined) {
+                olsSs = filteredFirstStageOccurrences.filter(occ => {
+                    let ssoccSameTaxa = filteredSkipperStageOccurrences.filter(ssocc => occ.tna === ssocc.tna)
+
+                    return !isGreaterThanNDegreesFromAll(ssoccSameTaxa, occ, 2)
+                })
+                console.log("Filtered %d %s taxa within 2 degrees long/lat of same taxa in %s", olsSs.length, firstStage.nam, skipperStage.nam)
+            }
+
 
             //The records remaining in this file, then, are all records of species found on both sides of the
             // boundary within two degrees longitude and latitude. The count of
@@ -242,6 +297,13 @@ async function main() {
             //NLSSS = Number of Local Stage-Straddling Species
             const nlsss = olsss.reduce(uniqueSpecies, {seen: new Set(), result: []}).result || [];
 
+            //NLSSkS = Number of Local Stage-Skipping Species
+            let nlsSs = []
+            if(skipperStage !== undefined) {
+                nlsSs = olsSs.reduce(uniqueSpecies, {seen: new Set(), result: []}).result || [];
+                console.log("Total NLSSkS value for %s/%s boundary: %d", firstStage.nam, skipperStage.nam, nlsSs.length)
+            }
+
             //Workaround skipping the Archean/Eoarchean
             const index = (firstStage.nam === 'Hadean') ? i + 1 : i;
 
@@ -249,9 +311,21 @@ async function main() {
             console.log("Total OLSSS value for %s/%s boundary: %d", firstStage.nam, nextStage.nam, olsss.length)
             await writeJsonToFile(datasource_prefix, `OLSSS-${index}.json`, olsss)
 
+            if(skipperStage !== undefined) {
+                //OLSSkS = Occurrences of Local Stage-Skipping Species
+                console.log("Total OLSSkS value for %s/%s boundary: %d", firstStage.nam, skipperStage.nam, olsSs.length)
+                await writeJsonToFile(datasource_prefix, `OLSSkS-${index}.json`, olsSs)
+
+                //OLSSkS = Occurrences of Global Stage-Skipping Species
+                console.log("Total OGSSkS value for %s/%s boundary: %d", firstStage.nam, skipperStage.nam, ogsSs.length)
+                await writeJsonToFile(datasource_prefix, `OGSSkS-${index}.json`, ogsSs)
+
+            }
+
             //OLSSS = Occurrences of Global Stage-Straddling Species
             console.log("Total OGSSS value for %s/%s boundary: %d", firstStage.nam, nextStage.nam, ogsss.length)
             await writeJsonToFile(datasource_prefix, `OGSSS-${index}.json`, ogsss)
+
 
             console.log("Total NLSSS value for %s/%s boundary: %d", firstStage.nam, nextStage.nam, nlsss.length)
             await writeJsonToFile(datasource_prefix, `NLSSS-${index}-${firstStage.nam}-${nextStage.nam}.json`, nlsss)
@@ -262,6 +336,10 @@ async function main() {
                 above: nextStageSpecies.length,
                 tcss: tcss.length,
                 ngsss: ngsss.length,
+                nlsSs: nlsSs.length,
+                ngsSs: ngsSs.length,
+                ogsSs: ogsSs.length,
+                olsSs: olsSs.length,
                 olsss: olsss.length,
                 ogsss: ogsss.length,
                 nlsss_perc: ((nlsss.length / firstStageSpecies.length) * 100).toFixed(2),
