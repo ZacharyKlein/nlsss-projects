@@ -49,7 +49,15 @@ async function main() {
         // For example, reading the file content:
         const boundaryPoints = await readJsonFromFile(filePath);
 
+        const globalBoundaryPoints = await readJsonFromFile(filePath.replaceAll("OLSSS", "OGSSS"));
+
         const boundaryCoordinates = boundaryPoints.map(occ => {
+            return {
+                lat: occ.lat, lon: occ.lng, label: ''
+            }
+        })
+
+        const globalBoundaryCoordinates = globalBoundaryPoints.map(occ => {
             return {
                 lat: occ.lat, lon: occ.lng, label: ''
             }
@@ -61,14 +69,14 @@ async function main() {
 
         console.log("Generating map for " + file)
 
-        await plotMap(boundaryCoordinates, "data/maps/" + file.replaceAll(".json", "-map.png"), canvas, context)
+        await plotMap(boundaryCoordinates, globalBoundaryCoordinates, "data/maps/" + file.replaceAll(".json", "-map.png"), canvas, context)
 
     }
 
     console.log("Finished.")
 }
 
-async function plotMap(coordinates, filename, canvas, context) {
+async function plotMap(coordinates, globalCoordinates, filename, canvas, context) {
     console.log("Plotting map for %d coordinates", coordinates.length)
 
 // Set up a geographic projection (Natural Earth Projection in this case)
@@ -96,6 +104,22 @@ async function plotMap(coordinates, filename, canvas, context) {
         context.stroke();
     });
 
+
+    // Plot each coordinate on the map
+    globalCoordinates.forEach((coord) => {
+        const [x, y] = projection([coord.lon, coord.lat]); // Project longitude and latitude
+
+        // Draw a red dot at each coordinate
+        context.beginPath();
+        context.arc(x, y, 3, 0, 2 * Math.PI); // A circle with a radius of 5
+        context.fillStyle = 'green';
+        context.fill();
+
+        // Add labels
+        context.font = 'bold 15px Arial';
+        context.fillStyle = 'black';
+        context.fillText(coord.label, x + 8, y + 4); // Place label near the dot
+    });
 
     // Plot each coordinate on the map
     coordinates.forEach((coord) => {
