@@ -1,12 +1,19 @@
 import fetch from "node-fetch";
-import {promises as fs} from "fs";
+
+import {
+    arrayToCSV,
+    isGreaterThanNDegreesFromAll,
+    readJsonFromFile, uniqueSpecies,
+    wise2023Filter,
+    writeCSVToFile,
+    writeJsonToFile
+} from "./utils.js";
 
 const PALEO_DB_BASE_URL = "http://paleobiodb.org/data1.2/"
-//TODO: const STAGE_LIST_URL = "timescales/list.txt?type=stage"
+//TODO: const STAGE_LIST_URL = "timescales/list.txt?type=stage" //PaleobioDb API is broken
 const OCC_LIST_URL = "occs/list.json?datainfo&rowcount&idreso=species&show=class,coords,loc&timerule=contain"
 const INTERVAL_LIST_URL = "intervals/list.json?scale=1"
 
-//TODO: let stages
 let intervals
 let occurrencesForInterval = new Map()
 
@@ -14,50 +21,11 @@ const datasource_prefix = 'data/';
 const intervals_datasource = 'intervals.json';
 const occurrences_datasource = 'occurrences.json';
 
-// Function to convert JSON array to CSV format
-function convertToCSV(jsonArray) {
-    const headers = Object.keys(jsonArray[0]).join(','); // Get the headers
-    const rows = jsonArray.map(obj => Object.values(obj).join(',')); // Get the rows
-    return [headers, ...rows].join('\n'); // Combine headers and rows
-}
 
-// Function to write CSV file to the local filesystem
-async function writeCSVToFile(filename, data) {
-    await fs.writeFile(filename, data, (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
-        } else {
-            console.log(`CSV file written successfully to ${filename}`);
-        }
-    });
-}
-
-
-// Function to write JSON to a file
-async function writeJsonToFile(filename, data) {
-    fs.writeFile(datasource_prefix + filename, JSON.stringify(data, null, 2), (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
-        } else {
-            console.log('File written successfully.');
-        }
-    });
-};
-
-// Function to read JSON from a file
-async function readJsonFromFile(filename) {
-    console.log('reading file ' + filename);
-    try {
-        const data = await fs.readFile(datasource_prefix + filename,); // Read the file
-        return JSON.parse(data); // Parse the JSON data
-    } catch (error) {
-        return null;
-    }
-}
 
 async function fetchOccurrencesSequentially(intervals) {
 
-    let filteredIntervals = intervals.filter(wise2023)
+    let filteredIntervals = intervals.filter(wise2023Filter)
 
     for (const interval of filteredIntervals) {
         console.log("Fetching fossil occurrences for %s...", interval.nam);
@@ -75,7 +43,7 @@ async function fetchOccurrencesSequentially(intervals) {
 
             occurrencesForInterval[interval.oid] = occurrences
 
-            await writeJsonToFile(interval.oid.replaceAll("int:", '') + '_' + occurrences_datasource, occurrences);
+            await writeJsonToFile(datasource_prefix,interval.oid.replaceAll("int:", '') + '_' + occurrences_datasource, occurrences);
 
             console.log("Total occurrences fetched for interval %s: %s", interval.nam, occurrences.length);
 
@@ -91,7 +59,7 @@ async function loadPaleoDbData() {
     console.log("Loading PaleoDb data...")
     // Read the JSON back from the file (if present)
 
-    let _intervals = await readJsonFromFile(intervals_datasource);
+    let _intervals = await readJsonFromFile(datasource_prefix, intervals_datasource);
 
     async function downloadPaleoDbForIntervals() {
         console.log("Downloading PaleoDb data from API");
@@ -102,7 +70,7 @@ async function loadPaleoDbData() {
 
         // Write the JSON array to a file
 
-        await writeJsonToFile(intervals_datasource, _intervals);
+        await writeJsonToFile(datasource_prefix, intervals_datasource, _intervals);
 
 
         //for loop over intervals
@@ -115,10 +83,10 @@ async function loadPaleoDbData() {
 
         let _occurrencesForInterval = new Map();
 
-        let filteredIntervals = intervals.filter(wise2023);
+        let filteredIntervals = intervals.filter(wise2023Filter);
 
         for (const interval of filteredIntervals) {
-            let occurrences = await readJsonFromFile(interval.oid.replaceAll("int:", '') + '_' + occurrences_datasource)
+            let occurrences = await readJsonFromFile(datasource_prefix, interval.oid.replaceAll("int:", '') + '_' + occurrences_datasource)
 
             if (occurrences === null) {
                 console.warn("No occurrences stored for %s", interval.nam)
@@ -139,7 +107,7 @@ async function loadPaleoDbData() {
         console.error("No intervals stored");
         await downloadPaleoDbForIntervals();
     } else {
-        _intervals = _intervals.filter(wise2023);
+        _intervals = _intervals.filter(wise2023Filter);
 
         occurrencesForInterval = await loadPaleoDbFromDisk(_intervals);
 
@@ -148,83 +116,12 @@ async function loadPaleoDbData() {
     return _intervals;
 }
 
-function wise2023(interval) {
-
-    let result = false
-
-    //Include all ages by default
-    if (interval.itp === 'age') result = true;
-
-    //Include Hadean eonthem
-    if (interval.oid === 'int:11') result = true;
-
-    //Include Pridoli epoch
-    if (interval.oid === 'int:59') result = true;
-
-    //Include Hadean eonthem
-    if (interval.oid === 'int:753') result = true;
-
-    //Include Archean erathems
-    if (interval.pid === 'int:753') result = true;
-
-    //Include Paleoproterozoic periods
-    if (interval.pid === 'int:756') result = true;
-
-    //Include Mesoproterozoic periods
-    if (interval.pid === 'int:755') result = true;
-
-    //Include Neoproterozoic periods
-    if (interval.pid === 'int:754') result = true;
-
-    //Include Holocene epoch
-    if (interval.oid === 'int:32') result = true;
-
-    //Exclude Holocene ages
-    if (interval.pid === 'int:32') result = false;
-
-    return result;
-}
-
-function isGreaterThanTwoDegreesFromAll(coordsArray, targetCoords) {
-    return coordsArray.every(coord => {
-        const latitudeDiff = Math.abs(coord.lat - targetCoords.lat);
-        const longitudeDiff = Math.abs(coord.lng - targetCoords.lng);
-
-        // Return true if this coordinate is more than 2 degrees away from target
-        return latitudeDiff > 2 || longitudeDiff > 2;
-    });
-}
-
-
-function uniqueSpecies(acc, obj) {
-    // If the name has not been encountered yet, add the object to the accumulator
-    if (!acc.seen.has(obj.tna)) {
-        acc.seen.add(obj.tna);
-        acc.result.push(obj);
-    }
-    return acc;
-}
-
 async function main() {
     console.log('Loading data from PaleoDB... ✨')
 
-
-// fetch(PALEO_DB_BASE_URL + STAGE_LIST_URL).then(response => response.text()).then((data) => {
-//     stages = csvToJson(data.split("\n"));
-//
-//     stages.forEach(stage => {
-//
-//         console.log("stage ID %s, %s", stage.interval_no, stage.interval_name)
-//     })
-//
-//     console.log(stages.length)
-//     }
-// );
     intervals = await loadPaleoDbData();
 
-
     //iterate over keys in occurrencesForInterval and sum the total of items in each array
-
     const totalOccurrences = Object.entries(occurrencesForInterval).reduce((acc, [key, array]) => {
         return acc + array.length; // Sum up the lengths of each array
     }, 0);
@@ -242,7 +139,7 @@ async function main() {
     });
 
 
-    let filteredIntervals = sortedIntervals.filter(wise2023)
+    let filteredIntervals = sortedIntervals.filter(wise2023Filter)
 
     console.table(filteredIntervals);
 
@@ -308,15 +205,15 @@ async function main() {
             }).result || [];
 
             // Total Combined Stage Species
-            let tcss = filteredFirstStageOccurrences.reduce(uniqueSpecies, {
+            let tcss = filteredFirstStageOccurrences.concat(filteredNextStageOccurrences).reduce(uniqueSpecies, {
                 seen: new Set(),
                 result: []
             }).result || [];
 
             //all records were deleted for species found only on one side of the boundary
 
-            //Stage-Straddling Species
-            let sss = filteredFirstStageOccurrences.filter(occ1 => filteredNextStageOccurrences.some(occ2 => occ2.tna === occ1.tna)).reduce(uniqueSpecies, {
+            //Number of Global Stage-Straddling Species
+            let ngsss = filteredFirstStageOccurrences.filter(occ1 => filteredNextStageOccurrences.some(occ2 => occ2.tna === occ1.tna)).reduce(uniqueSpecies, {
                 seen: new Set(),
                 result: []
             }).result || [];
@@ -330,7 +227,7 @@ async function main() {
             let olsss = filteredFirstStageOccurrences.filter(occ => {
                 let nsoccSameTaxa = filteredNextStageOccurrences.filter(nsocc => occ.tna === nsocc.tna)
 
-                return !isGreaterThanTwoDegreesFromAll(nsoccSameTaxa, occ)
+                return !isGreaterThanNDegreesFromAll(nsoccSameTaxa, occ, 2)
             })
 
             console.log("Filtered %d %s taxa within 2 degrees long/lat of same taxa in %s", olsss.length, firstStage.nam, nextStage.nam)
@@ -348,19 +245,19 @@ async function main() {
             console.log("Total OLSSS value for %s/%s boundary: %d", firstStage.nam, nextStage.nam, olsss.length)
 
             //Workaround skipping the Archean/Eoarchean
-            const index = (firstStage.nam === 'Hadean') ? i+1 : i;
+            const index = (firstStage.nam === 'Hadean') ? i + 1 : i;
 
-            await writeJsonToFile(`OLSSS-${index}.json`, olsss)
+            await writeJsonToFile(datasource_prefix, `OLSSS-${index}.json`, olsss)
 
             console.log("Total NLSSS value for %s/%s boundary: %d", firstStage.nam, nextStage.nam, nlsss.length)
-            await writeJsonToFile(`NLSSS-${index}-${firstStage.nam}-${nextStage.nam}.json`, nlsss)
+            await writeJsonToFile(datasource_prefix, `NLSSS-${index}-${firstStage.nam}-${nextStage.nam}.json`, nlsss)
 
             boundaries[index] = {
                 boundary: `${firstStage.nam}/${nextStage.nam}`,
                 below: firstStageSpecies.length,
                 above: nextStageSpecies.length,
                 tcss: tcss.length,
-                sss: sss.length,
+                ngsss: ngsss.length,
                 olsss: olsss.length,
                 nlsss_perc: ((nlsss.length / firstStageSpecies.length) * 100).toFixed(2),
                 nlsss: nlsss.length,
@@ -372,8 +269,13 @@ async function main() {
     console.table(boundaryArray);
 
     console.log("Writing out NLSSS boundaries to JSON...")
-    await writeJsonToFile("nlsss.json", boundaryArray);
+    await writeJsonToFile(datasource_prefix, "nlsss.json", boundaryArray);
 
+    // Convert array of objects to CSV string
+    const csvData = arrayToCSV(boundaryArray);
+
+    // Write CSV data to file
+    await writeCSVToFile('nlsss.csv', csvData)
 }
 
 await main();

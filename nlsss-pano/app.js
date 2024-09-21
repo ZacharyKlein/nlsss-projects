@@ -4,7 +4,7 @@ const ctx = document.getElementById('nlsss-chart').getContext('2d');
 const mapIndices = Array.from({length: 114}, (_, i) => i + 1);
 
 // Preload images (assuming images are named image1.jpg, image2.jpg, ... image114.jpg)
-const images = Array.from({ length: 114 }, (_, i) => `images/OLSSS-${i + 1}-map.png`);
+const images = Array.from({length: 114}, (_, i) => `images/OLSSS-${i + 1}-map.png`);
 
 console.log({images})
 
@@ -21,7 +21,6 @@ function updateImage(index) {
     let imageElement = document.getElementById('imageDisplay');
     imageElement.src = images[index]; // Update the src attribute with the corresponding image
 }
-
 
 
 async function main() {
@@ -44,17 +43,34 @@ async function main() {
 
     const dataPoints = await loadData(); // Load the data
 
+    const footer = (tooltipItems) => {
+
+        let item;
+        tooltipItems.forEach(function (tooltipItem) {
+            item = dataPoints[tooltipItem.dataIndex];
+            console.log(item)
+
+        });
+        return `${item.boundary}
+        NLSSS: ${item.nlsss} (${item.nlsss_perc}%)
+        Taxa below: ${item.below}
+        Taxa above: ${item.above}
+        Total taxa: ${item.tcss}
+        Global Stage-Straddlers: ${item.sss}
+        Occurrences: ${item.olsss}`
+    };
+
 // Create the chart
     const chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dataPoints.map(b => b.boundary), // X-axis labels (114 points)
+            labels: dataPoints.map(b => b.key), // X-axis labels (114 points)
             datasets: [{
-                label: 'Scrub Along X-axis',
+                label: 'NLSSS',
                 data: dataPoints.map(b => b.nlsss), // Just an example dataset
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
-                fill: false,
+                fill: true,
                 pointRadius: 0, // Remove point markers
                 tension: 0.1
             }]
@@ -63,7 +79,7 @@ async function main() {
             responsive: true,
             plugins: {
                 tooltip: {
-                    enabled: false // Disable tooltips
+                    enabled: true // Disable tooltips
                 }
             },
             scales: {
@@ -80,9 +96,17 @@ async function main() {
                     const index = chartElement[0].index; // Get the point index
                     updateImage(index); // Update image when scrubbing
                 }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        footer: footer,
+                    }
+                }
             }
         }
     });
+
 }
 
 main();
