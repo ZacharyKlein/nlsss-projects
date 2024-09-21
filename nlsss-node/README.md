@@ -13,6 +13,8 @@ Before running any of the scripts below, run:
 
 To prepare the environment. Tested using Node.js 18 on MacOS.
 
+![img.png](nlsss-screenshot.jpg)
+
 # index
 
 - Downloads data from the Paleobiology Database, stores as local JSON files under `data/`
@@ -30,6 +32,8 @@ Find files under `data/`
 Must be run *after* `index`. This script will output a series of global maps of each NLSSS boundary, plotting all the occurrences of each stage-straddling species. Maps are generated for each boundary and are output to the `data/maps` directory.
 
 Run `node generate-boundary-maps.js`
+
+![img.png](nlsss-map-screenshot.jpg)
 
 
 # generate-postflood-boundaries
