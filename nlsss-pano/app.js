@@ -53,11 +53,11 @@ async function main() {
         });
         return `${item.boundary}
         NLSSS: ${item.nlsss} (${item.nlsss_perc}%)
+        NLSSS (occurrences): ${item.olsss}
+        NGSSS: ${item.ngsss}
         Taxa below: ${item.below}
         Taxa above: ${item.above}
-        Total taxa: ${item.tcss}
-        Global Stage-Straddlers: ${item.ngsss}
-        Occurrences: ${item.olsss}`
+        Total taxa: ${item.tcss}`
     };
 
 // Create the chart
@@ -74,15 +74,15 @@ async function main() {
                 pointRadius: 0, // Remove point markers
                 tension: 0.1
             },
-                {
-                    label: 'NGSSS',
-                    data: dataPoints.map(b => b.ngsss), // Just an example dataset
-                    borderColor: 'rgb(96,243,70)',
-                    borderWidth: 2,
-                    fill: true,
-                    pointRadius: 0, // Remove point markers
-                    tension: 0.1
-                }]
+            {
+                label: 'NGSSS',
+                data: dataPoints.map(b => b.ngsss), // Just an example dataset
+                borderColor: 'rgb(96,243,70)',
+                borderWidth: 2,
+                fill: true,
+                pointRadius: 0, // Remove point markers
+                tension: 0.1
+            }]
         },
         options: {
             responsive: true,

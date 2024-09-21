@@ -111,7 +111,7 @@ async function plotMap(coordinates, globalCoordinates, filename, canvas, context
 
         // Draw a red dot at each coordinate
         context.beginPath();
-        context.arc(x, y, 3, 0, 2 * Math.PI); // A circle with a radius of 5
+        context.arc(x, y, 4, 0, 2 * Math.PI); // A circle with a radius of 5
         context.fillStyle = 'green';
         context.fill();
 
@@ -127,7 +127,7 @@ async function plotMap(coordinates, globalCoordinates, filename, canvas, context
 
         // Draw a red dot at each coordinate
         context.beginPath();
-        context.arc(x, y, 4, 0, 2 * Math.PI); // A circle with a radius of 5
+        context.arc(x, y, 5, 0, 2 * Math.PI); // A circle with a radius of 5
         context.fillStyle = 'blue';
         context.fill();
 
