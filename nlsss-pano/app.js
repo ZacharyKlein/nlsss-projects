@@ -56,7 +56,7 @@ async function main() {
         Taxa below: ${item.below}
         Taxa above: ${item.above}
         Total taxa: ${item.tcss}
-        Global Stage-Straddlers: ${item.sss}
+        Global Stage-Straddlers: ${item.ngsss}
         Occurrences: ${item.olsss}`
     };
 
