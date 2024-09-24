@@ -81,6 +81,17 @@ async function main() {
         updateImage(index);
     }
 
+    // Secondary labels (for the second X-axis)
+    const geoLabels = [
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Cambrian", "", "", "", "",
+        "", "", "", "", "Ordovician", "", "", "", "", "", "", "Silurian", "", "", "", "", "", "", "", "Devonian",
+        "", "", "", "", "", "", "Miss.", "", "", "Penn.", "", "", "", "Permian", "", "", "", "", "", "",
+        "", "", "Triassic", "", "", "", "", "", "", "Jurassic", "", "", "", "", "", "", "", "", "", "",
+        "Cretaceous", "", "", "", "", "", "", "", "", "", "", "", "Paleogene", "", "", "", "", "", "", "",
+        "", "Neogene", "", "", "", "", "", "Quaternary", "", "", ""
+    ];
+
+
     // Create the chart
     const chart = new Chart(ctx, {
         type: 'line',
@@ -164,8 +175,30 @@ async function main() {
             },
             scales: {
                 x: {
-                    beginAtZero: true
-                }
+                    beginAtZero: true,
+                    position: 'bottom', // Primary X-axis at the bottom
+                    title: {
+                        display: true,
+                        text: 'Stage Boundaries'
+                    }
+                },
+                x2: {
+                    type: 'category', // Use the 'category' type for custom labels
+                    labels: geoLabels, // Secondary X-axis labels
+                    position: 'top', // Position the second X-axis on top
+                    title: {
+                        display: true,
+                        text: ''
+                    },
+                    grid: {
+                        display: false, // Optionally hide the grid lines for the secondary axis
+                    },
+                    ticks: {
+                        autoSkip: false, // Skip labels to avoid overlap
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                },
             },
             interaction: {
                 mode: 'nearest', // Scrub mode nearest to the X position
